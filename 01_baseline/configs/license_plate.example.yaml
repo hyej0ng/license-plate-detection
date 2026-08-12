@@ -1,0 +1,10 @@
+# Copy this file to license_plate.yaml and replace the path with the absolute
+# path of the preprocessed dataset on your machine.
+path: /absolute/path/to/landing_pjt/01_baseline/data/preprocessed
+
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: license_plate
