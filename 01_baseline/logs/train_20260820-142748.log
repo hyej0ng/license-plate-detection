@@ -1,0 +1,212 @@
+[INFO] Logging to: /home/hyejong/landing_pjt/01_baseline/logs/train_20260820-142748.log
+[INFO] time_local: 2026-08-20T14:27:51+09:00
+[INFO] time_utc:   2026-08-20T05:27:51+00:00
+[INFO] Python: 3.11.15
+[INFO] PyTorch: 2.6.0+cu126
+[INFO] Ultralytics: 8.4.95
+[INFO] data_yaml: /home/hyejong/landing_pjt/01_baseline/configs/license_plate.yaml
+[INFO] data_root: /home/hyejong/landing_pjt/01_baseline/data/preprocessed
+[INFO] training_mode: new
+[INFO] model_checkpoint: /home/hyejong/landing_pjt/common/weights/pretrained/yolo26n.pt
+[INFO] run_directory: /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748
+[INFO] train: images=193,975, labels=193,975
+[INFO] val: images=13,300, labels=13,300
+[INFO] test: images=485, labels=485
+[INFO] device: cuda:0 (NVIDIA TITAN RTX, 23.5 GB)
+[INFO] epochs=30, patience=0, imgsz=640, batch=-1, workers=8
+[INFO] optimizer=SGD, lr0=0.002, lrf=0.01, momentum=0.937, weight_decay=0.0005, warmup_epochs=5.0
+[INFO] mosaic=0.2, mixup=0.0, scale=0.2, translate=0.05, fliplr=0.5, flipud=0.0
+[INFO] early_stopping: disabled (patience=0)
+[INFO] validation thresholds: confidence=0.001, NMS IoU=0.7
+[INFO] Starting training
+[YOLO] New https://pypi.org/project/ultralytics/8.4.123 available 😃 Update with 'pip install -U ultralytics'
+[YOLO] Ultralytics 8.4.95 🚀 Python-3.11.15 torch-2.6.0+cu126 CUDA:0 (NVIDIA TITAN RTX, 24023MiB)
+[YOLO] [34m[1mengine/trainer: [0magnostic_nms=False, amp=True, angle=1.0, augment=False, auto_augment=randaugment, batch=-1, bgr=0.0, box=7.5, cache=False, cfg=None, classes=None, close_mosaic=10, cls=0.5, cls_pw=0.0, cls_remap=True, compile=False, conf=0.001, copy_paste=0.0, copy_paste_mode=flip, cos_lr=True, cutmix=0.0, data=/home/hyejong/landing_pjt/01_baseline/configs/license_plate.yaml, degrees=0.0, deterministic=True, device=0, dfl=1.5, dis=6.0, distill_model=None, dnn=False, dropout=0.0, dynamic=False, embed=None, end2end=None, epochs=30, erasing=0.4, exist_ok=False, fliplr=0.5, flipud=0.0, format=torchscript, fraction=1.0, freeze=None, hsv_h=0.015, hsv_s=0.5, hsv_v=0.3, imgsz=640, iou=0.7, keras=False, kobj=1.0, line_width=None, lr0=0.002, lrf=0.01, mask_ratio=4, max_det=300, mixup=0.0, mode=train, model=/home/hyejong/landing_pjt/common/weights/pretrained/yolo26n.pt, momentum=0.937, mosaic=0.2, multi_scale=0.0, name=baseline_yolo26n_20260820-142748, nbs=64, nms=False, opset=None, optimize=False, optimizer=SGD, overlap_mask=True, patience=0, perspective=0.0, plots=True, pose=12.0, pretrained=True, profile=False, project=/home/hyejong/landing_pjt/01_baseline/runs, quantize=None, rect=False, resume=False, retina_masks=False, rle=1.0, save=True, save_conf=False, save_crop=False, save_dir=/home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748, save_frames=False, save_json=False, save_period=-1, save_txt=False, scale=0.2, seed=42, shear=0.0, show=False, show_boxes=True, show_conf=True, show_labels=True, simplify=True, single_cls=False, source=None, split=val, stream_buffer=False, task=detect, time=None, tracker=tracktrack.yaml, translate=0.05, val=True, verbose=True, vid_stride=1, visualize=False, warmup_bias_lr=0.1, warmup_epochs=5.0, warmup_momentum=0.8, weight_decay=0.0005, workers=8, workspace=None
+[YOLO] Overriding model.yaml nc=80 with nc=1
+[YOLO] 
+                   from  n    params  module                                       arguments                     
+[YOLO]   0                  -1  1       464  ultralytics.nn.modules.conv.Conv             [3, 16, 3, 2]                 
+[YOLO]   1                  -1  1      4672  ultralytics.nn.modules.conv.Conv             [16, 32, 3, 2]                
+[YOLO]   2                  -1  1      6640  ultralytics.nn.modules.block.C3k2            [32, 64, 1, False, 0.25]      
+[YOLO]   3                  -1  1     36992  ultralytics.nn.modules.conv.Conv             [64, 64, 3, 2]                
+[YOLO]   4                  -1  1     26080  ultralytics.nn.modules.block.C3k2            [64, 128, 1, False, 0.25]     
+[YOLO]   5                  -1  1    147712  ultralytics.nn.modules.conv.Conv             [128, 128, 3, 2]              
+[YOLO]   6                  -1  1     87040  ultralytics.nn.modules.block.C3k2            [128, 128, 1, True]           
+[YOLO]   7                  -1  1    295424  ultralytics.nn.modules.conv.Conv             [128, 256, 3, 2]              
+[YOLO]   8                  -1  1    346112  ultralytics.nn.modules.block.C3k2            [256, 256, 1, True]           
+[YOLO]   9                  -1  1    164608  ultralytics.nn.modules.block.SPPF            [256, 256, 5, 3, True]        
+[YOLO]  10                  -1  1    249728  ultralytics.nn.modules.block.C2PSA           [256, 256, 1]                 
+[YOLO]  11                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+[YOLO]  12             [-1, 6]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+[YOLO]  13                  -1  1    119808  ultralytics.nn.modules.block.C3k2            [384, 128, 1, True]           
+[YOLO]  14                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+[YOLO]  15             [-1, 4]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+[YOLO]  16                  -1  1     34304  ultralytics.nn.modules.block.C3k2            [256, 64, 1, True]            
+[YOLO]  17                  -1  1     36992  ultralytics.nn.modules.conv.Conv             [64, 64, 3, 2]                
+[YOLO]  18            [-1, 13]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+[YOLO]  19                  -1  1     95232  ultralytics.nn.modules.block.C3k2            [192, 128, 1, True]           
+[YOLO]  20                  -1  1    147712  ultralytics.nn.modules.conv.Conv             [128, 128, 3, 2]              
+[YOLO]  21            [-1, 10]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+[YOLO]  22                  -1  1    463104  ultralytics.nn.modules.block.C3k2            [384, 256, 1, True, 0.5, True]
+[YOLO]  23        [16, 19, 22]  1    241566  ultralytics.nn.modules.head.Detect           [1, 1, True, [64, 128, 256]]  
+[YOLO] YOLO26n summary: 260 layers, 2,504,190 parameters, 2,504,190 gradients, 5.8 GFLOPs
+[YOLO] 
+[YOLO] Transferred 606/708 items from pretrained weights
+[YOLO] [34m[1mAMP: [0mrunning Automatic Mixed Precision (AMP) checks...
+[YOLO] [34m[1mAMP: [0mchecks passed ✅
+[YOLO] [34m[1mtrain: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 1331.1±874.6 MB/s, size: 122.5 KB)
+[YOLO] [34m[1mAutoBatch: [0mComputing optimal batch size for imgsz=640 at 60.0% CUDA memory utilization.
+[YOLO] [34m[1mAutoBatch: [0mCUDA:0 (NVIDIA TITAN RTX) 23.46G total, 0.09G reserved, 0.05G allocated, 23.32G free
+[YOLO]       Params      GFLOPs  GPU_mem (GB)  forward (ms) backward (ms)                   input                  output
+[YOLO]      2504190       5.772         0.478         68.91           nan        (1, 3, 640, 640)                    list
+[YOLO]      2504190       11.54         1.017          50.9           nan        (2, 3, 640, 640)                    list
+[YOLO]      2504190       23.09         1.795         51.39           nan        (4, 3, 640, 640)                    list
+[YOLO]      2504190       46.17         3.429         62.61           nan        (8, 3, 640, 640)                    list
+[YOLO]      2504190       92.35         6.457         59.61           nan       (16, 3, 640, 640)                    list
+[YOLO]      2504190       184.7        12.432            76           nan       (32, 3, 640, 640)                    list
+[YOLO]      2504190       369.4        24.023         87.04           nan       (64, 3, 640, 640)                    list
+[YOLO] [34m[1mAutoBatch: [0mUsing batch-size 35 for CUDA:0 13.79G/23.46G (59%) ✅
+[YOLO] [34m[1mtrain: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 1315.0±1073.9 MB/s, size: 138.5 KB)
+[YOLO] [34m[1mval: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 460.7±500.3 MB/s, size: 125.1 KB)
+[YOLO] [34m[1moptimizer:[0m SGD(lr=0.002, momentum=0.937) with parameter groups 114 weight(decay=0.0), 126 weight(decay=0.000546875), 126 bias(decay=0.0)
+[YOLO] Plotting labels to /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/labels.jpg... 
+[YOLO] Image sizes 640 train, 640 val
+Using 6 dataloader workers
+Logging results to [1m/home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748[0m
+Starting training for 30 epochs...
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.732      0.742        0.8      0.417
+[LOG]   3.3% | epoch 001/030 | train_loss 4.3008 | val_loss 2.7397 | P 0.7323 | R 0.7416 | F1 0.7369 | mAP50 0.8001 | mAP50-95 0.4171 | lr 3.999e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.819      0.828      0.887       0.54
+[LOG]   6.7% | epoch 002/030 | train_loss 3.0283 | val_loss 2.2219 | P 0.8194 | R 0.8280 | F1 0.8237 | mAP50 0.8866 | mAP50-95 0.5396 | lr 7.978e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.846      0.875      0.914      0.582
+[LOG]  10.0% | epoch 003/030 | train_loss 2.7032 | val_loss 2.0050 | P 0.8462 | R 0.8745 | F1 0.8601 | mAP50 0.9136 | mAP50-95 0.5820 | lr 1.187e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.863      0.882      0.925      0.599
+[LOG]  13.3% | epoch 004/030 | train_loss 2.4478 | val_loss 1.9262 | P 0.8631 | R 0.8822 | F1 0.8726 | mAP50 0.9248 | mAP50-95 0.5993 | lr 1.561e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.872      0.893      0.933      0.619
+[LOG]  16.7% | epoch 005/030 | train_loss 2.2469 | val_loss 1.8338 | P 0.8723 | R 0.8933 | F1 0.8827 | mAP50 0.9332 | mAP50-95 0.6193 | lr 1.914e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.879      0.906      0.941      0.642
+[LOG]  20.0% | epoch 006/030 | train_loss 2.0762 | val_loss 1.7310 | P 0.8786 | R 0.9059 | F1 0.8920 | mAP50 0.9414 | mAP50-95 0.6419 | lr 1.867e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.883      0.916      0.948      0.654
+[LOG]  23.3% | epoch 007/030 | train_loss 1.9696 | val_loss 1.6802 | P 0.8835 | R 0.9160 | F1 0.8995 | mAP50 0.9478 | mAP50-95 0.6537 | lr 1.811e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.895      0.921      0.952      0.659
+[LOG]  26.7% | epoch 008/030 | train_loss 1.9007 | val_loss 1.6591 | P 0.8946 | R 0.9211 | F1 0.9077 | mAP50 0.9522 | mAP50-95 0.6595 | lr 1.746e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.899      0.928      0.955      0.665
+[LOG]  30.0% | epoch 009/030 | train_loss 1.8558 | val_loss 1.6281 | P 0.8993 | R 0.9277 | F1 0.9133 | mAP50 0.9546 | mAP50-95 0.6645 | lr 1.672e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398        0.9      0.934      0.956      0.671
+[LOG]  33.3% | epoch 010/030 | train_loss 1.8159 | val_loss 1.5939 | P 0.9001 | R 0.9345 | F1 0.9170 | mAP50 0.9562 | mAP50-95 0.6706 | lr 1.592e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.899      0.939      0.956      0.678
+[LOG]  36.7% | epoch 011/030 | train_loss 1.7807 | val_loss 1.5568 | P 0.8986 | R 0.9385 | F1 0.9182 | mAP50 0.9562 | mAP50-95 0.6778 | lr 1.505e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.901      0.939      0.957      0.685
+[LOG]  40.0% | epoch 012/030 | train_loss 1.7553 | val_loss 1.5220 | P 0.9011 | R 0.9394 | F1 0.9199 | mAP50 0.9574 | mAP50-95 0.6853 | lr 1.413e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.897      0.943      0.963      0.691
+[LOG]  43.3% | epoch 013/030 | train_loss 1.7310 | val_loss 1.4947 | P 0.8970 | R 0.9433 | F1 0.9196 | mAP50 0.9632 | mAP50-95 0.6911 | lr 1.316e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.897      0.945      0.965      0.696
+[LOG]  46.7% | epoch 014/030 | train_loss 1.7119 | val_loss 1.4745 | P 0.8970 | R 0.9453 | F1 0.9205 | mAP50 0.9650 | mAP50-95 0.6957 | lr 1.216e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.899      0.945      0.967      0.701
+[LOG]  50.0% | epoch 015/030 | train_loss 1.6915 | val_loss 1.4586 | P 0.8993 | R 0.9453 | F1 0.9217 | mAP50 0.9671 | mAP50-95 0.7008 | lr 1.113e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398        0.9      0.945      0.969      0.705
+[LOG]  53.3% | epoch 016/030 | train_loss 1.6738 | val_loss 1.4475 | P 0.8996 | R 0.9453 | F1 0.9219 | mAP50 0.9688 | mAP50-95 0.7046 | lr 1.010e-03
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.893      0.952       0.97      0.707
+[LOG]  56.7% | epoch 017/030 | train_loss 1.6575 | val_loss 1.4427 | P 0.8934 | R 0.9524 | F1 0.9220 | mAP50 0.9695 | mAP50-95 0.7067 | lr 9.065e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.892      0.954       0.97      0.708
+[LOG]  60.0% | epoch 018/030 | train_loss 1.6407 | val_loss 1.4417 | P 0.8925 | R 0.9541 | F1 0.9222 | mAP50 0.9702 | mAP50-95 0.7082 | lr 8.042e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.896      0.949      0.971      0.709
+[LOG]  63.3% | epoch 019/030 | train_loss 1.6242 | val_loss 1.4443 | P 0.8961 | R 0.9495 | F1 0.9220 | mAP50 0.9712 | mAP50-95 0.7090 | lr 7.041e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.894      0.951      0.972      0.708
+[LOG]  66.7% | epoch 020/030 | train_loss 1.6100 | val_loss 1.4505 | P 0.8944 | R 0.9511 | F1 0.9219 | mAP50 0.9718 | mAP50-95 0.7084 | lr 6.073e-04
+[YOLO] Closing dataloader mosaic
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398        0.9      0.947      0.972      0.708
+[LOG]  70.0% | epoch 021/030 | train_loss 1.5732 | val_loss 1.4547 | P 0.9000 | R 0.9468 | F1 0.9228 | mAP50 0.9722 | mAP50-95 0.7078 | lr 5.150e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.893      0.953      0.972      0.707
+[LOG]  73.3% | epoch 022/030 | train_loss 1.5593 | val_loss 1.4638 | P 0.8934 | R 0.9527 | F1 0.9221 | mAP50 0.9721 | mAP50-95 0.7068 | lr 4.281e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.906       0.94      0.973      0.705
+[LOG]  76.7% | epoch 023/030 | train_loss 1.5479 | val_loss 1.4711 | P 0.9058 | R 0.9404 | F1 0.9228 | mAP50 0.9728 | mAP50-95 0.7052 | lr 3.476e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.898      0.947      0.973      0.703
+[LOG]  80.0% | epoch 024/030 | train_loss 1.5394 | val_loss 1.4849 | P 0.8977 | R 0.9469 | F1 0.9216 | mAP50 0.9727 | mAP50-95 0.7030 | lr 2.743e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.892      0.951      0.973        0.7
+[LOG]  83.3% | epoch 025/030 | train_loss 1.5277 | val_loss 1.5003 | P 0.8918 | R 0.9513 | F1 0.9206 | mAP50 0.9727 | mAP50-95 0.7005 | lr 2.091e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.893       0.95      0.973      0.699
+[LOG]  86.7% | epoch 026/030 | train_loss 1.5199 | val_loss 1.5075 | P 0.8930 | R 0.9495 | F1 0.9204 | mAP50 0.9728 | mAP50-95 0.6991 | lr 1.526e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398       0.89      0.953      0.973      0.698
+[LOG]  90.0% | epoch 027/030 | train_loss 1.5140 | val_loss 1.5132 | P 0.8898 | R 0.9533 | F1 0.9205 | mAP50 0.9729 | mAP50-95 0.6980 | lr 1.056e-04
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.894      0.947      0.973      0.697
+[LOG]  93.3% | epoch 028/030 | train_loss 1.5090 | val_loss 1.5193 | P 0.8939 | R 0.9469 | F1 0.9196 | mAP50 0.9731 | mAP50-95 0.6966 | lr 6.845e-05
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.891      0.952      0.973      0.695
+[LOG]  96.7% | epoch 029/030 | train_loss 1.5056 | val_loss 1.5253 | P 0.8907 | R 0.9521 | F1 0.9204 | mAP50 0.9732 | mAP50-95 0.6953 | lr 4.163e-05
+[YOLO] 
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[YOLO]                    all      13300      19398      0.893      0.949      0.973      0.694
+[LOG] 100.0% | epoch 030/030 | train_loss 1.5035 | val_loss 1.5318 | P 0.8930 | R 0.9489 | F1 0.9201 | mAP50 0.9732 | mAP50-95 0.6944 | lr 2.542e-05
+[YOLO] 
+30 epochs completed in 9.726 hours.
+[YOLO] Optimizer stripped from /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/weights/last.pt, 5.4MB
+[YOLO] Optimizer stripped from /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/weights/best.pt, 5.4MB
+[YOLO] 
+Validating /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/weights/best.pt...
+[YOLO] Ultralytics 8.4.95 🚀 Python-3.11.15 torch-2.6.0+cu126 CUDA:0 (NVIDIA TITAN RTX, 24023MiB)
+[YOLO] YOLO26n summary (fused): 122 layers, 2,375,031 parameters, 0 gradients, 5.2 GFLOPs
+[YOLO]                    all      13300      19398      0.896       0.95      0.971      0.704
+[YOLO] Speed: 0.1ms preprocess, 0.9ms inference, 0.0ms loss, 0.1ms postprocess per image
+[YOLO] Results saved to [1m/home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748[0m
+[INFO] Training finished. elapsed_time: 9:44:58.295626
+[INFO] Best model: /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/weights/best.pt
+[INFO] Validation metrics: /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/results.csv
+[INFO] Loss graph: /home/hyejong/landing_pjt/01_baseline/runs/baseline_yolo26n_20260820-142748/loss_curve.png
