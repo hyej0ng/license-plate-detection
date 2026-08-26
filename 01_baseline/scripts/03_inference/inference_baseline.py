@@ -2,7 +2,10 @@
 실행 방법: 
 cd /path/to/landing_pjt
 conda activate yolo
-python 01_baseline/scripts/03_inference/inference_baseline.py
+python 01_baseline/scripts/03_inference/inference_baseline.py \
+  --model 01_baseline/runs/baseline_yolo26n_20260820-142748_30epoch/weights/best.pt \
+  --conf 0.001
+  
 """
 
 import argparse
@@ -18,9 +21,7 @@ import ultralytics
 from ultralytics import YOLO
 
 
-# =============================================================================
 # 1. 기본 경로와 inference 설정
-# =============================================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -284,8 +285,10 @@ def main():
             detection_writer.writeheader()
             summary_writer.writeheader()
 
-            for result in results:
-                image_name = Path(result.path).name
+            for image_path, result in zip(image_paths, results):
+                # 경로 목록을 batch inference하면 Ultralytics가 result.path를
+                # image0.jpg처럼 바꿀 수 있으므로 실제 입력 파일명을 직접 사용한다.
+                image_name = image_path.name
                 detections = get_detections(result)
 
                 for detection in detections:

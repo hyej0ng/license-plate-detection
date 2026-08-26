@@ -45,12 +45,15 @@ LOGS_DIR = PROJECT_ROOT / "01_baseline" / "logs"
 EPOCHS = 50
 PATIENCE = 0  # 0: early stopping을 사용하지 않고 EPOCHS까지 학습
 IMAGE_SIZE = 640
-BATCH_SIZE = -1  # -1: GPU 메모리에 맞게 Ultralytics가 자동 결정
+# 864로했더니 미탐이 가장 작았다
+BATCH_SIZE = 32  # -1: GPU 메모리에 맞게 Ultralytics가 자동 결정
+# 32
 WORKERS = 8
-DEVICE = 0  # 첫 번째 GPU. CPU를 쓸 때는 "cpu"로 변경
+DEVICE = 4  # n번째 GPU를 사용하겠단 뜻. CPU를 쓸 때는 "cpu"로 변경
 
 OPTIMIZER = "SGD"
-INITIAL_LR = 0.003
+INITIAL_LR = 0.002
+# 다들 0.05~0.02
 FINAL_LR_RATIO = 0.01
 MOMENTUM = 0.937
 WEIGHT_DECAY = 0.0005
