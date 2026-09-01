@@ -1,0 +1,7 @@
+path: /home/hyejong/landing_pjt/02_quarter/data/preprocessed
+
+train: images/train
+val: images/val
+
+names:
+  0: license_plate

@@ -1,0 +1,7 @@
+[INFO] time_local: 2026-09-01T12:34:25+09:00
+[INFO] time_utc:   2026-09-01T03:34:25+00:00
+[INFO] data_root: /mnt/hdd_10tb_sda/YOLO_Object_Detection_Dataset
+[INFO] output_root: /home/hyejong/landing_pjt/02_quarter/data/preprocessed
+[INFO] splits=['train', 'val'], margin_ratio=0.05, min_visible_ratio=0.5, image_size=640
+[INFO] train: available_pairs=193,975, selected=193,975
+[LOG] train 1/193,975
