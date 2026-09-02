@@ -43,7 +43,7 @@ from quarter_utils import (  # noqa: E402
 )
 
 
-# 1. 경로와 기본 하이퍼파라미터
+# 1. 경로와 기본 하이퍼파라미터 설정
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 QUARTER_ROOT = PROJECT_ROOT / "02_quarter"
 DEFAULT_DATA_ROOT = Path(
@@ -52,8 +52,10 @@ DEFAULT_DATA_ROOT = Path(
         "/mnt/hdd_10tb_sda/YOLO_Object_Detection_Dataset",
     )
 )
-DEFAULT_OUTPUT_ROOT = QUARTER_ROOT / "data" / "preprocessed"
-DEFAULT_VISUALIZATION_ROOT = QUARTER_ROOT / "data" / "visualization" / "crops"
+EXTERNAL_DATA_ROOT = Path("/mnt/hdd_10tb_sdb/hyejong/02_quarter/data")
+
+DEFAULT_OUTPUT_ROOT = EXTERNAL_DATA_ROOT / "preprocessed"
+DEFAULT_VISUALIZATION_ROOT = EXTERNAL_DATA_ROOT / "visualization" / "crops"
 LOGS_ROOT = QUARTER_ROOT / "logs"
 
 MARGIN_RATIO = 0.05
@@ -62,6 +64,7 @@ IMAGE_SIZE = 640
 VISUALIZE_COUNT = 5
 
 
+# 2. 명령행 실행 인자 설정
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="마진 기반 4분할 Train/Val 전처리")
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
@@ -80,6 +83,7 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+# 3. 터미널과 파일에 전처리 로그 저장
 def make_logger(path: Path) -> logging.Logger:
     logger = logging.getLogger(f"quarter_preprocess_{path.stem}")
     logger.setLevel(logging.INFO)
@@ -91,6 +95,7 @@ def make_logger(path: Path) -> logging.Logger:
     return logger
 
 
+# 4. 원본 이미지에 4분할 영역과 JSON bbox 시각화
 def draw_split_overview(image, boxes, regions, output_path: Path) -> None:
     canvas = image.copy()
     colors = [(255, 80, 80), (80, 180, 255), (180, 80, 255), (80, 220, 120)]
@@ -115,6 +120,7 @@ def draw_split_overview(image, boxes, regions, output_path: Path) -> None:
         raise IOError(f"분할 시각화 저장 실패: {output_path}")
 
 
+# 5. Letterbox 이미지에 변환된 YOLO bbox 시각화
 def draw_letterbox_boxes(image, yolo_boxes, output_path: Path) -> None:
     canvas = image.copy()
     for index, yolo_box in enumerate(yolo_boxes, start=1):
@@ -127,6 +133,7 @@ def draw_letterbox_boxes(image, yolo_boxes, output_path: Path) -> None:
         raise IOError(f"crop 시각화 저장 실패: {output_path}")
 
 
+# 6. 이미지 한 장을 4분할하고 bbox를 YOLO 라벨로 변환
 def process_sample(
     stem: str,
     image_path: Path,
@@ -210,6 +217,7 @@ def process_sample(
     }
 
 
+# 7. split 전체 이미지 처리와 성공·오류 통계 집계
 def process_split(split: str, arguments: argparse.Namespace, logger: logging.Logger, error_writer) -> dict:
     pairs = matching_pairs(arguments.data_root, split)
     total_pairs = len(pairs)
@@ -258,6 +266,7 @@ def process_split(split: str, arguments: argparse.Namespace, logger: logging.Log
     return stats
 
 
+# 8. 실행 인자 검증과 출력 경로 준비
 def main() -> None:
     arguments = parse_arguments()
     arguments.data_root = arguments.data_root.resolve()
@@ -287,6 +296,7 @@ def main() -> None:
         f"min_visible_ratio={arguments.min_visible_ratio}, image_size={arguments.image_size}"
     )
 
+    # 9. Train/Val 전처리 실행과 오류 파일 저장
     all_stats = {}
     error_path.parent.mkdir(parents=True, exist_ok=True)
     with error_path.open("w", newline="", encoding="utf-8") as error_file:
@@ -296,6 +306,7 @@ def main() -> None:
         for split in arguments.splits:
             all_stats[split] = process_split(split, arguments, logger, error_writer)
 
+    # 10. 전처리 설정과 최종 통계를 JSON 및 로그로 저장
     payload = {
         "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "data_root": str(arguments.data_root),

@@ -1,4 +1,12 @@
-"""전처리된 4분할 Train/Val 데이터로 YOLOv26n을 학습한다."""
+"""
+실행방법:
+python 02_quarter/scripts/02_training/train_quarter.py \
+  --device 0 \
+  --epochs 50 \
+  --batch 64 \
+  --patience 0 \
+  --seed 42
+"""
 
 from __future__ import annotations
 
@@ -36,7 +44,7 @@ LOGS_DIR = QUARTER_ROOT / "logs"
 EPOCHS = 50
 PATIENCE = 0
 IMAGE_SIZE = 640
-BATCH_SIZE = -1
+BATCH_SIZE = 64
 WORKERS = 8
 DEVICE = "0"
 

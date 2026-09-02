@@ -27,9 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-# =============================================================================
 # 1. 경로 설정
-# =============================================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATA_YAML = PROJECT_ROOT / "01_baseline" / "configs" / "license_plate.yaml"
@@ -38,15 +36,13 @@ RUNS_DIR = PROJECT_ROOT / "01_baseline" / "runs"
 LOGS_DIR = PROJECT_ROOT / "01_baseline" / "logs"
 
 
-# =============================================================================
-# 2. 학습 설정 - 하이퍼파라미터는 여기에서 변경한다.
-# =============================================================================
+# 2. 학습 설정 - 하이퍼파라미터는 여기에서 변경
 
-EPOCHS = 50
+EPOCHS = 50 # default = 50
 PATIENCE = 0  # 0: early stopping을 사용하지 않고 EPOCHS까지 학습
-IMAGE_SIZE = 640
+IMAGE_SIZE = 640 # default = 640
 # 864로했더니 미탐이 가장 작았다
-BATCH_SIZE = 32  # -1: GPU 메모리에 맞게 Ultralytics가 자동 결정
+BATCH_SIZE = -1  # -1: GPU 메모리에 맞게 Ultralytics가 자동 결정
 # 32
 WORKERS = 8
 DEVICE = 4  # n번째 GPU를 사용하겠단 뜻. CPU를 쓸 때는 "cpu"로 변경
@@ -78,7 +74,7 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 
 
 def make_logger(log_path):
-    """터미널과 파일에 같은 사용자 로그를 남긴다."""
+    """터미널과 파일에 같은 사용자 로그를 남긴다"""
     logger = logging.getLogger(f"baseline_training_{log_path.stem}")
     logger.setLevel(logging.INFO)
     logger.propagate = False
@@ -102,7 +98,7 @@ def make_logger(log_path):
 
 
 def count_files(folder, extensions):
-    """폴더 바로 아래에서 지정한 확장자의 파일 수를 센다."""
+    """폴더 바로 아래에서 지정한 확장자의 파일 수를 센다"""
     return sum(
         1
         for path in folder.iterdir()
@@ -111,7 +107,7 @@ def count_files(folder, extensions):
 
 
 def check_dataset_and_count(model_path):
-    """학습 전에 YAML과 train/val/test 이미지·라벨 경로를 확인한다."""
+    """학습 전에 YAML과 train/val/test 이미지·라벨 경로를 확인한다"""
     if not DATA_YAML.is_file():
         raise FileNotFoundError(f"데이터 YAML이 없습니다: {DATA_YAML}")
     if not model_path.is_file():
@@ -152,7 +148,7 @@ def check_dataset_and_count(model_path):
 
 
 def parse_arguments():
-    """새 학습, 가중치 이어 학습, 정확한 resume 중 하나를 선택한다."""
+    """새 학습, 가중치 이어 학습, 정확한 resume 중 하나를 선택한다"""
     parser = argparse.ArgumentParser(description="YOLOv26n baseline 학습")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
@@ -184,7 +180,7 @@ def check_resume_checkpoint(checkpoint_path):
 
 
 def number(row, key):
-    """CSV 값을 float로 바꾼다. 값이 없으면 NaN을 반환한다."""
+    """CSV 값을 float로 바꾼다. 값이 없으면 NaN을 반환한다"""
     value = row.get(key)
     if value is None or value == "":
         return math.nan
@@ -192,7 +188,7 @@ def number(row, key):
 
 
 def total_loss(row, prefix):
-    """YOLO의 box, class, DFL loss를 더해 보기 쉬운 총 loss를 만든다."""
+    """YOLO의 box, class, DFL loss를 더해 보기 쉬운 총 loss를 만든다"""
     keys = [
         f"{prefix}/box_loss",
         f"{prefix}/cls_loss",
@@ -232,7 +228,7 @@ def save_loss_graph(csv_path, graph_path):
 
 
 class EpochRecorder:
-    """매 epoch 종료 시 한 줄 로그와 누적 loss 그래프를 만든다."""
+    """매 epoch 종료 시 한 줄 로그와 누적 loss 그래프를 만든다"""
 
     def __init__(self, logger):
         self.logger = logger
@@ -289,7 +285,7 @@ def log_start_information(
     model_path,
     resume_epoch,
 ):
-    """학습 재현에 필요한 환경과 설정을 로그 맨 앞에 기록한다."""
+    """학습 재현에 필요한 환경과 설정을 로그 맨 앞에 기록한다"""
     local_time = datetime.now().astimezone()
     utc_time = datetime.now(timezone.utc)
 
