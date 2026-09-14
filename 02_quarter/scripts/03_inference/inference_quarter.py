@@ -1,4 +1,15 @@
-"""원본 Test 이미지를 메모리에서 4분할하고 원본 좌표 Global NMS를 수행한다."""
+"""
+원본 Test 이미지를 메모리에서 4분할하고 원본 좌표 Global NMS를 수행함
+실행 방법:
+python 02_quarter/scripts/03_inference/inference_quarter.py \
+  --model /home/hyejong/landing_pjt/02_quarter/runs/quarter_yolo26n_20260903-152325/weights/best.pt \
+  --data-root /mnt/hdd_10tb_sda/YOLO_Object_Detection_Dataset \
+  --margin-ratio 0.05 \
+  --confidence 0.25 \
+  --nms-iou 0.50 \
+  --image-size 640 \
+  --device 6
+"""
 
 from __future__ import annotations
 

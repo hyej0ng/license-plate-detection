@@ -1,4 +1,12 @@
-"""Global NMS 예측을 JSON 또는 YOLO 정답과 원본 이미지 단위로 평가한다."""
+"""Global NMS 예측을 JSON 또는 YOLO 정답과 원본 이미지 단위로 평가함
+실행방법:
+python 02_quarter/scripts/04_evaluation/evaluate_quarter.py \
+  --predictions /home/hyejong/landing_pjt/02_quarter/results/predictions/quarter_inference_20260908-162018 \
+  --ground-truth-format json \
+  --data-root /mnt/hdd_10tb_sda/YOLO_Object_Detection_Dataset \
+  --confidence 0.25 \
+  --match-iou 0.50
+"""
 
 from __future__ import annotations
 
@@ -13,6 +21,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
+import matplotlib
+import numpy as np
+
+
+# 화면이 없는 서버에서도 결과 그래프를 PNG로 저장한다.
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -83,7 +98,8 @@ def resolve_prediction_files(path: Path) -> tuple[Path, Path | None, Path]:
     raise FileNotFoundError(f"예측 경로가 없습니다: {path}")
 
 
-def read_predictions(path: Path, confidence: float) -> dict[str, list[dict]]:
+def read_predictions(path: Path) -> dict[str, list[dict]]:
+    """저장된 모든 예측을 이미지별 confidence 내림차순으로 읽는다."""
     if not path.is_file():
         raise FileNotFoundError(f"예측 CSV가 없습니다: {path}")
     predictions: dict[str, list[dict]] = defaultdict(list)
@@ -94,8 +110,6 @@ def read_predictions(path: Path, confidence: float) -> dict[str, list[dict]]:
             raise ValueError(f"예측 CSV 필수 열이 없습니다: {sorted(required)}")
         for row in reader:
             score = float(row["confidence"])
-            if score < confidence:
-                continue
             predictions[row["image_name"]].append(
                 {
                     "class_id": int(row["class_id"]),
@@ -108,22 +122,33 @@ def read_predictions(path: Path, confidence: float) -> dict[str, list[dict]]:
     return predictions
 
 
-def read_summary_names(path: Path | None) -> list[str] | None:
+def read_image_summary(path: Path | None) -> list[dict[str, str]] | None:
     if path is None:
         return None
     with path.open("r", encoding="utf-8") as file:
-        return [row["image_name"] for row in csv.DictReader(file)]
+        rows = list(csv.DictReader(file))
+    required = {"image_name", "image_width", "image_height"}
+    if rows and not required.issubset(rows[0]):
+        raise ValueError(f"요약 CSV 필수 열이 없습니다: {sorted(required)}")
+    return rows
 
 
-def load_json_ground_truth(data_root: Path, selected_names: set[str] | None = None) -> dict[str, dict]:
+def load_json_ground_truth(
+    data_root: Path,
+    selected_names: set[str] | None = None,
+    image_sizes: dict[str, tuple[int, int]] | None = None,
+) -> dict[str, dict]:
     ground_truth = {}
     for stem, image_path, json_path in matching_pairs(data_root, "test"):
         if selected_names is not None and image_path.name not in selected_names:
             continue
-        image = cv2.imread(str(image_path))
-        if image is None:
-            raise ValueError(f"이미지를 읽지 못했습니다: {image_path}")
-        height, width = image.shape[:2]
+        if image_sizes is not None and image_path.name in image_sizes:
+            width, height = image_sizes[image_path.name]
+        else:
+            image = cv2.imread(str(image_path))
+            if image is None:
+                raise ValueError(f"이미지를 읽지 못했습니다: {image_path}")
+            height, width = image.shape[:2]
         boxes = []
         for box in extract_boxes_from_json(load_json(json_path)):
             clipped = clip_box(box, width, height)
@@ -227,6 +252,70 @@ def safe_divide(numerator: int | float, denominator: int | float) -> float:
     return numerator / denominator if denominator else 0.0
 
 
+def calculate_ap(
+    all_image_data: dict[str, dict],
+    iou_threshold: float,
+    total_ground_truths: int,
+) -> tuple[float, np.ndarray, np.ndarray]:
+    """저장된 전체 예측을 confidence 순으로 나열해 101-point interpolated AP를 계산한다."""
+    ranked_predictions = []
+    for image_name, image_data in all_image_data.items():
+        for prediction in image_data["predictions"]:
+            ranked_predictions.append(
+                {
+                    "image_name": image_name,
+                    "prediction": prediction,
+                }
+            )
+    ranked_predictions.sort(
+        key=lambda item: item["prediction"]["confidence"],
+        reverse=True,
+    )
+
+    used_ground_truths = {image_name: set() for image_name in all_image_data}
+    true_positives = []
+    false_positives = []
+    for item in ranked_predictions:
+        image_name = item["image_name"]
+        prediction = item["prediction"]
+        ground_truths = all_image_data[image_name]["ground_truths"]
+        best_index = None
+        best_iou = 0.0
+        for ground_truth_index, ground_truth in enumerate(ground_truths):
+            if ground_truth_index in used_ground_truths[image_name]:
+                continue
+            if prediction["class_id"] != ground_truth["class_id"]:
+                continue
+            iou = calculate_iou(prediction["box"], ground_truth["box"])
+            if iou > best_iou:
+                best_iou = iou
+                best_index = ground_truth_index
+
+        if best_index is not None and best_iou >= iou_threshold:
+            used_ground_truths[image_name].add(best_index)
+            true_positives.append(1)
+            false_positives.append(0)
+        else:
+            true_positives.append(0)
+            false_positives.append(1)
+
+    if not ranked_predictions or total_ground_truths == 0:
+        return 0.0, np.array([0.0]), np.array([0.0])
+
+    cumulative_tp = np.cumsum(true_positives)
+    cumulative_fp = np.cumsum(false_positives)
+    recalls = cumulative_tp / total_ground_truths
+    precisions = cumulative_tp / np.maximum(cumulative_tp + cumulative_fp, 1)
+    recall_points = np.linspace(0.0, 1.0, 101)
+    interpolated_precisions = [
+        float(precisions[recalls >= recall_point].max())
+        if np.any(recalls >= recall_point)
+        else 0.0
+        for recall_point in recall_points
+    ]
+    return float(np.mean(interpolated_precisions)), recalls, precisions
+
+
 def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
     with path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -234,17 +323,143 @@ def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
         writer.writerows(rows)
 
 
+def save_pr_curve(recalls: np.ndarray, precisions: np.ndarray, ap50: float, output_path: Path) -> None:
+    """저장된 예측의 Precision-Recall curve를 저장한다."""
+    figure, axis = plt.subplots(figsize=(8, 6))
+    axis.plot(recalls, precisions, linewidth=2, label=f"AP@0.50 = {ap50:.4f}")
+    axis.set_xlim(0.0, 1.0)
+    axis.set_ylim(0.0, 1.05)
+    axis.set_xlabel("Recall")
+    axis.set_ylabel("Precision")
+    axis.set_title("Quarter Test Precision-Recall Curve")
+    axis.grid(alpha=0.3)
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=150)
+    plt.close(figure)
+
+
+def save_evaluation_summary(
+    metrics: dict,
+    recalls: np.ndarray,
+    precisions: np.ndarray,
+    output_path: Path,
+) -> None:
+    """AP/mAP와 PR curve를 포함한 최종 test 요약 그림을 저장한다."""
+    figure = plt.figure(figsize=(14, 9))
+    grid = figure.add_gridspec(2, 2, height_ratios=[1.0, 1.15])
+    metric_axis = figure.add_subplot(grid[0, 0])
+
+    metric_names = ["Precision", "Recall", "F1", "mIoU(TP)", "AP50", "mAP50-95"]
+    metric_values = [
+        metrics["precision"],
+        metrics["recall"],
+        metrics["f1_score"],
+        metrics["mean_iou_of_true_positives"],
+        metrics["AP50_from_saved_predictions"],
+        metrics["mAP50_95_from_saved_predictions"],
+    ]
+    metric_bars = metric_axis.bar(metric_names, metric_values, color="#2878B5")
+    metric_axis.set_ylim(0.0, 1.05)
+    metric_axis.set_ylabel("score")
+    metric_axis.set_title("Main test metrics")
+    metric_axis.grid(axis="y", alpha=0.3)
+    metric_axis.set_axisbelow(True)
+    metric_axis.tick_params(axis="x", rotation=25)
+    for bar, value in zip(metric_bars, metric_values):
+        metric_axis.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + 0.02,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+
+    count_axis = figure.add_subplot(grid[0, 1])
+    count_names = ["TP", "FP", "FN"]
+    count_values = [
+        metrics["true_positives"],
+        metrics["false_positives"],
+        metrics["false_negatives"],
+    ]
+    count_bars = count_axis.bar(
+        count_names,
+        count_values,
+        color=["#2CA02C", "#D62728", "#FF8C00"],
+    )
+    count_axis.set_ylabel("number of boxes")
+    count_axis.set_title("Detection counts")
+    count_axis.grid(axis="y", alpha=0.3)
+    count_axis.set_axisbelow(True)
+    for bar, value in zip(count_bars, count_values):
+        count_axis.text(
+            bar.get_x() + bar.get_width() / 2,
+            value,
+            f"{value:,}",
+            ha="center",
+            va="bottom",
+        )
+
+    pr_axis = figure.add_subplot(grid[1, :])
+    pr_axis.plot(recalls, precisions, linewidth=2, color="#2878B5")
+    pr_axis.set_xlim(0.0, 1.0)
+    pr_axis.set_ylim(0.0, 1.05)
+    pr_axis.set_xlabel("Recall")
+    pr_axis.set_ylabel("Precision")
+    pr_axis.set_title(
+        f"Precision-Recall curve  |  AP50={metrics['AP50_from_saved_predictions']:.3f}"
+    )
+    pr_axis.grid(alpha=0.3)
+
+    figure.suptitle(
+        "YOLOv26n Quarter - Final Test Evaluation\n"
+        f"images={metrics['test_images']:,}, GT={metrics['ground_truth_count']:,}, "
+        f"confidence>={metrics['confidence_threshold']:.2f}, "
+        f"match IoU>={metrics['match_iou_threshold']:.2f}",
+        fontsize=16,
+    )
+    figure.text(
+        0.5,
+        0.01,
+        "AP/mAP uses all predictions available in the saved detections.csv.",
+        ha="center",
+        fontsize=9,
+        color="dimgray",
+    )
+    figure.tight_layout(rect=[0.0, 0.035, 1.0, 0.93])
+    figure.savefig(output_path, dpi=150)
+    plt.close(figure)
+
+
 def main() -> None:
     arguments = parse_arguments()
     validate_ratio("confidence_threshold", arguments.confidence)
     validate_ratio("matching_iou_threshold", arguments.match_iou)
     prediction_csv, summary_csv, prediction_run = resolve_prediction_files(arguments.predictions)
-    predictions_by_image = read_predictions(prediction_csv, arguments.confidence)
-    summary_names = read_summary_names(summary_csv)
+    all_predictions_by_image = read_predictions(prediction_csv)
+    summary_rows = read_image_summary(summary_csv)
+    summary_names = (
+        [row["image_name"] for row in summary_rows]
+        if summary_rows is not None
+        else None
+    )
+    image_sizes = (
+        {
+            row["image_name"]: (int(row["image_width"]), int(row["image_height"]))
+            for row in summary_rows
+        }
+        if summary_rows is not None
+        else None
+    )
 
     selected_names = set(summary_names) if summary_names is not None else None
     if arguments.ground_truth_format == "json":
-        ground_truth_by_image = load_json_ground_truth(arguments.data_root.resolve(), selected_names)
+        ground_truth_by_image = load_json_ground_truth(
+            arguments.data_root.resolve(),
+            selected_names,
+            image_sizes,
+        )
     else:
         if arguments.image_root is None or arguments.ground_truth_root is None:
             raise ValueError("YOLO 모드는 --image-root와 --ground-truth-root가 필요합니다.")
@@ -276,12 +491,26 @@ def main() -> None:
 
     per_image_rows = []
     match_rows = []
+    all_image_data = {}
     totals = {"gt": 0, "predictions": 0, "tp": 0, "fp": 0, "fn": 0}
     matched_ious = []
+    all_saved_confidences = []
     for number, image_name in enumerate(image_names, start=1):
         item = ground_truth_by_image[image_name]
         ground_truths = item["boxes"]
-        predictions = predictions_by_image.get(image_name, [])
+        all_predictions = all_predictions_by_image.get(image_name, [])
+        predictions = [
+            prediction
+            for prediction in all_predictions
+            if prediction["confidence"] >= arguments.confidence
+        ]
+        all_saved_confidences.extend(
+            prediction["confidence"] for prediction in all_predictions
+        )
+        all_image_data[image_name] = {
+            "ground_truths": ground_truths,
+            "predictions": all_predictions,
+        }
         matches, false_negatives = match_one_image(predictions, ground_truths, arguments.match_iou)
         tp = sum(match["is_true_positive"] for match in matches)
         fp = len(predictions) - tp
@@ -339,10 +568,30 @@ def main() -> None:
     recall = safe_divide(totals["tp"], totals["tp"] + totals["fn"])
     f1 = safe_divide(2 * precision * recall, precision + recall)
     mean_iou = sum(matched_ious) / len(matched_ious) if matched_ious else 0.0
+
+    average_precisions = {}
+    ap50_recalls = np.array([0.0])
+    ap50_precisions = np.array([0.0])
+    for iou_threshold in np.arange(0.50, 0.96, 0.05):
+        average_precision, recalls, precisions = calculate_ap(
+            all_image_data,
+            float(iou_threshold),
+            totals["gt"],
+        )
+        average_precisions[f"AP@{iou_threshold:.2f}"] = average_precision
+        if np.isclose(iou_threshold, 0.50):
+            ap50_recalls = recalls
+            ap50_precisions = precisions
+    ap50 = average_precisions["AP@0.50"]
+    map50_95 = float(np.mean(list(average_precisions.values())))
+
     metrics = {
         "prediction_run": str(prediction_run),
         "ground_truth_format": arguments.ground_truth_format,
         "confidence_threshold": arguments.confidence,
+        "minimum_confidence_in_saved_predictions": (
+            min(all_saved_confidences) if all_saved_confidences else None
+        ),
         "match_iou_threshold": arguments.match_iou,
         "test_images": len(image_names),
         "ground_truth_count": totals["gt"],
@@ -355,6 +604,9 @@ def main() -> None:
         "f1_score": f1,
         "detection_rate_percent": recall * 100.0,
         "mean_iou_of_true_positives": mean_iou,
+        "AP50_from_saved_predictions": ap50,
+        "mAP50_95_from_saved_predictions": map50_95,
+        **average_precisions,
     }
     (metrics_dir / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
     write_csv(metrics_dir / "metrics.csv", [{"metric": key, "value": value} for key, value in metrics.items()], ["metric", "value"])
@@ -364,11 +616,25 @@ def main() -> None:
         match_rows,
         ["image_name", "result", "prediction_index", "ground_truth_index", "confidence", "iou"],
     )
+    pr_curve_path = metrics_dir / "pr_curve.png"
+    summary_path = metrics_dir / "evaluation_summary.png"
+    save_pr_curve(ap50_recalls, ap50_precisions, ap50, pr_curve_path)
+    save_evaluation_summary(metrics, ap50_recalls, ap50_precisions, summary_path)
     logger.info(f"[RESULT] TP={totals['tp']}, FP={totals['fp']}, FN={totals['fn']}")
     logger.info(f"[RESULT] Precision={precision:.6f}, Recall={recall:.6f}, F1={f1:.6f}, mean_IoU={mean_iou:.6f}")
+    logger.info(
+        f"[RESULT] AP50={ap50:.6f}, mAP50-95={map50_95:.6f} "
+        "(all saved predictions)"
+    )
     logger.info(f"[RESULT] metrics={metrics_dir}")
+    logger.info(f"[RESULT] summary_image={summary_path}")
+    logger.info(f"[RESULT] pr_curve={pr_curve_path}")
     logger.info(f"[RESULT] false_positive_images={fp_dir}")
     logger.info(f"[RESULT] false_negative_images={fn_dir}")
+    logger.info(
+        "[INFO] Precision/Recall/F1은 --confidence 기준, AP/mAP는 저장된 전체 예측을 사용합니다. "
+        "inference confidence 미만의 예측은 detections.csv에 없으므로 포함되지 않습니다."
+    )
 
 
 if __name__ == "__main__":

@@ -1,11 +1,17 @@
 """
 실행방법:
 python 02_quarter/scripts/02_training/train_quarter.py \
-  --device 0 \
-  --epochs 50 \
-  --batch 64 \
+  --device 2 \
+  --epochs 40 \
+  --batch 128 \
   --patience 0 \
   --seed 42
+
+resume
+python 02_quarter/scripts/02_training/train_quarter.py \
+  --resume /home/hyejong/landing_pjt/02_quarter/runs/quarter_yolo26n_20260903-152325/weights/last.pt \
+  --epochs 50 \
+  --device 2
 """
 
 from __future__ import annotations
@@ -44,16 +50,17 @@ LOGS_DIR = QUARTER_ROOT / "logs"
 EPOCHS = 50
 PATIENCE = 0
 IMAGE_SIZE = 640
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 WORKERS = 8
-DEVICE = "0"
+DEVICE = "0" # gpu 번호
 
 OPTIMIZER = "SGD"
-INITIAL_LR = 0.002
+INITIAL_LR = 0.001
 FINAL_LR_RATIO = 0.01
 MOMENTUM = 0.937
 WEIGHT_DECAY = 0.0005
-WARMUP_EPOCHS = 5.0
+WARMUP_EPOCHS = 1.0
+WARMUP_BIAS_LR = 0.01 #기본 설정값이 0.1이었음 너무 큼
 
 MOSAIC = 0.20
 MIXUP = 0.0
@@ -244,7 +251,9 @@ def main() -> None:
         )
         logger.info(
             f"[INFO] optimizer={OPTIMIZER}, lr0={INITIAL_LR}, lrf={FINAL_LR_RATIO}, momentum={MOMENTUM}, "
-            f"weight_decay={WEIGHT_DECAY}, mosaic={MOSAIC}, scale={SCALE}, conf={VAL_CONFIDENCE}, iou={VAL_NMS_IOU}"
+            f"weight_decay={WEIGHT_DECAY}, warmup_epochs={WARMUP_EPOCHS}, "
+            f"warmup_bias_lr={WARMUP_BIAS_LR}, mosaic={MOSAIC}, scale={SCALE}, "
+            f"conf={VAL_CONFIDENCE}, iou={VAL_NMS_IOU}"
         )
         if arguments.check_only:
             logger.info("[RESULT] check_only passed: dataset, labels, model checkpoint, and arguments are valid")
@@ -272,7 +281,8 @@ def main() -> None:
                 imgsz=arguments.image_size, batch=arguments.batch, workers=arguments.workers,
                 device=arguments.device, optimizer=OPTIMIZER, lr0=INITIAL_LR,
                 lrf=FINAL_LR_RATIO, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY,
-                warmup_epochs=WARMUP_EPOCHS, cos_lr=True, mosaic=MOSAIC, mixup=MIXUP,
+                warmup_epochs=WARMUP_EPOCHS, warmup_bias_lr=WARMUP_BIAS_LR,
+                cos_lr=True, mosaic=MOSAIC, mixup=MIXUP,
                 scale=SCALE, translate=TRANSLATE, fliplr=HORIZONTAL_FLIP,
                 flipud=VERTICAL_FLIP, hsv_h=HSV_H, hsv_s=HSV_S, hsv_v=HSV_V,
                 close_mosaic=10, amp=True, cache=False, val=True, conf=VAL_CONFIDENCE,

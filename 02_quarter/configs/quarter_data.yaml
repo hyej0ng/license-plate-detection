@@ -1,4 +1,4 @@
-path: /mnt/hdd_10tb_sdb/hyejong/02_quarter/data/preprocessed
+path: /home/hyejong/landing_pjt/02_quarter/data/preprocessed
 
 train: images/train
 val: images/val
