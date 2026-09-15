@@ -9,7 +9,7 @@ python 02_quarter/scripts/02_training/train_quarter.py \
 
 resume
 python 02_quarter/scripts/02_training/train_quarter.py \
-  --resume /home/hyejong/landing_pjt/02_quarter/runs/quarter_yolo26n_20260903-152325/weights/last.pt \
+  --resume /home/hyejong/landing_pjt/02_quarter/runs/quarter_yolo26n_20260909-145054/weights/last.pt \
   --epochs 50 \
   --device 2
 """
@@ -51,7 +51,7 @@ EPOCHS = 50
 PATIENCE = 0
 IMAGE_SIZE = 640
 BATCH_SIZE = 128
-WORKERS = 8
+WORKERS = 0
 DEVICE = "0" # gpu 번호
 
 OPTIMIZER = "SGD"
