@@ -1,0 +1,10 @@
+# preprocess_roboflow.py가 실제 절대 경로를 사용한
+# configs/license_plate_vehicle.yaml을 자동 생성합니다.
+path: /home/hyejong/landing_pjt/03_two_stage/data/preprocessed
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: plate
+  1: car
