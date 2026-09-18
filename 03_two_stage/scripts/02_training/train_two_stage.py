@@ -1,4 +1,9 @@
-"""전처리된 vehicle/license_plate 데이터로 YOLOv26n을 학습하고 매 epoch 검증한다."""
+"""전처리된 vehicle/license_plate 데이터로 YOLOv26n을 학습하고 매 epoch 검증한다.
+
+재개하는법:
+python 03_two_stage/scripts/02_training/train_two_stage.py \
+  --resume 03_two_stage/runs/<run-name>/weights/last.pt
+"""
 
 from __future__ import annotations
 
@@ -39,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     mode.add_argument("--weights", type=Path, help="지정 가중치로 optimizer를 새로 시작")
     mode.add_argument("--resume", type=Path, help="last.pt에서 optimizer/epoch까지 복구")
     parser.add_argument("--data", type=Path, default=DEFAULT_DATA)
-    parser.add_argument("--device", default="0")
+    parser.add_argument("--device", default="1")
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch", type=int, default=-1)
     parser.add_argument("--workers", type=int, default=8)

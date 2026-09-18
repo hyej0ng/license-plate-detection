@@ -1,4 +1,11 @@
-"""저장된 test 예측을 class-aware IoU 1:1 매칭으로 평가한다."""
+"""저장된 test 예측을 class-aware IoU 1:1 매칭으로 평가한다.
+
+python 03_two_stage/scripts/04_evaluation/evaluate_two_stage.py \
+  --predictions 03_two_stage/results/predictions/two_stage_inference_20260917-104047 \
+  --data 03_two_stage/configs/license_plate_vehicle.yaml \
+  --confidence 0.25 \
+  --match-iou 0.50
+"""
 
 from __future__ import annotations
 
@@ -215,9 +222,45 @@ def save_error_image(image_path: Path, predictions: list[dict], ground_truths: l
         cv2.imwrite(str(fn_dir / image_path.name), image)
 
 
+def summary_table_rows(metrics: dict) -> list[dict]:
+    """전체/클래스별 탐지 개수와 핵심 점수를 같은 열로 정리한다."""
+    rows = []
+    for scope, values in [("overall", metrics), *metrics["per_class"].items()]:
+        rows.append({
+            "scope": scope,
+            "test_images": metrics["test_images"],
+            "confidence_threshold": metrics["confidence_threshold"],
+            "match_iou_threshold": metrics["match_iou_threshold"],
+            "ground_truth_count": values["ground_truth_count"],
+            "prediction_count": values["prediction_count"],
+            "true_positives": values["true_positives"],
+            "false_positives": values["false_positives"],
+            "false_negatives": values["false_negatives"],
+            "precision": values["precision"],
+            "recall": values["recall"],
+            "f1_score": values["f1_score"],
+            "detection_rate_percent": values["detection_rate_percent"],
+            "mean_iou_of_true_positives": values["mean_iou_of_true_positives"],
+            "AP50_or_mAP50": values["mAP50"] if scope == "overall" else values["AP50"],
+            "mAP50_95": values["mAP50_95"],
+        })
+    return rows
+
+
+def save_summary_table_csv(metrics: dict, output_path: Path) -> None:
+    """분석/비교에 재사용할 수 있는 수치 요약표를 저장한다."""
+    rows = summary_table_rows(metrics)
+    with output_path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def save_summary(metrics: dict, output_path: Path) -> None:
-    """전체 및 클래스별 핵심 지표를 한 장의 그림으로 저장한다."""
-    figure, axes = plt.subplots(1, 2, figsize=(14, 6))
+    """전체/클래스별 그래프와 TP·FP·FN 집계표를 한 장에 저장한다."""
+    figure = plt.figure(figsize=(18, 9))
+    grid = figure.add_gridspec(2, 2, height_ratios=(3.4, 1.3))
+    axes = [figure.add_subplot(grid[0, 0]), figure.add_subplot(grid[0, 1])]
     overall_names = ["Precision", "Recall", "F1", "mIoU(TP)", "mAP50", "mAP50-95"]
     overall_values = [metrics[key] for key in (
         "precision", "recall", "f1_score", "mean_iou_of_true_positives", "mAP50", "mAP50_95"
@@ -239,6 +282,40 @@ def save_summary(metrics: dict, output_path: Path) -> None:
     axes[1].set(title="Per-class metrics", ylabel="score", ylim=(0, 1.05), xticks=positions, xticklabels=class_names)
     axes[1].grid(axis="y", alpha=0.3)
     axes[1].legend()
+
+    table_axis = figure.add_subplot(grid[1, :])
+    table_axis.axis("off")
+    table_axis.set_title("Detection counts and scores by class", loc="left", pad=10)
+    rows = summary_table_rows(metrics)
+    table_columns = [
+        ("scope", "Scope"), ("ground_truth_count", "GT"), ("prediction_count", "Pred"),
+        ("true_positives", "TP"), ("false_positives", "FP"), ("false_negatives", "FN"),
+        ("precision", "P"), ("recall", "R"), ("f1_score", "F1"),
+        ("detection_rate_percent", "Det.%"), ("mean_iou_of_true_positives", "mIoU(TP)"),
+        ("AP50_or_mAP50", "AP50"), ("mAP50_95", "mAP50-95"),
+    ]
+    count_fields = {"ground_truth_count", "prediction_count", "true_positives", "false_positives", "false_negatives"}
+    cell_text = [
+        [
+            str(row[key]) if key == "scope" or key in count_fields
+            else f"{row[key]:.1f}" if key == "detection_rate_percent"
+            else f"{row[key]:.3f}"
+            for key, _ in table_columns
+        ]
+        for row in rows
+    ]
+    table = table_axis.table(
+        cellText=cell_text, colLabels=[label for _, label in table_columns],
+        cellLoc="center", loc="center", bbox=(0, 0, 1, 0.85),
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    for (row_index, _), cell in table.get_celld().items():
+        if row_index == 0:
+            cell.set_facecolor("#dceaf4")
+            cell.set_text_props(weight="bold")
+        elif row_index % 2 == 0:
+            cell.set_facecolor("#f4f7fa")
     figure.suptitle(
         f"Two-stage YOLOv26n test | conf>={metrics['confidence_threshold']:.3f}, "
         f"match IoU>={metrics['match_iou_threshold']:.2f}"
@@ -379,6 +456,7 @@ def main() -> None:
     }
     (output / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
     save_summary(metrics, output / "evaluation_summary.png")
+    save_summary_table_csv(metrics, output / "evaluation_summary_table.csv")
     with (output / "metrics.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["metric", "value"])
@@ -414,6 +492,7 @@ def main() -> None:
     logger.info(f"[RESULT] Precision={precision:.6f}, Recall={recall:.6f}, F1={metrics['f1_score']:.6f}")
     logger.info(f"[RESULT] mIoU(TP)={metrics['mean_iou_of_true_positives']:.6f}, "
                 f"mAP50={metrics['mAP50']:.6f}, mAP50-95={metrics['mAP50_95']:.6f}")
+    logger.info(f"[RESULT] summary_table={output / 'evaluation_summary_table.csv'}")
     logger.info(f"[RESULT] output={output}")
 
 

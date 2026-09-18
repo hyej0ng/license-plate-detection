@@ -168,6 +168,9 @@ python 03_two_stage/scripts/04_evaluation/evaluate_two_stage.py \
 ```
 
 전체 및 클래스별 Precision, Recall, F1, 탐지율, TP의 mIoU, AP50, mAP50-95와 PR curve가 `results/metrics`에 저장됩니다. FP/FN 시각화는 `results/errors`에 저장됩니다. 동일한 비교에서는 inference confidence, evaluation confidence, match IoU를 세 모델 모두 같게 유지해야 합니다.
+평가를 실행할 때마다 `evaluation_summary.png`의 그래프 아래에 전체·번호판·차량의
+GT, 예측, TP, FP, FN, Precision, Recall, F1, 탐지율, mIoU, AP 요약표가 같이 생성됩니다.
+동일한 수치는 `evaluation_summary_table.csv`로도 저장되며, confidence/IoU 기준값을 각 행에 함께 기록합니다.
 
 ## 한 명령으로 전체 실행
 

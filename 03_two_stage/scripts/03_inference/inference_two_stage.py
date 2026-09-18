@@ -1,4 +1,16 @@
-"""차량 탐지 → 차량 crop → 번호판 탐지 → 원본 좌표 복원의 2단계 inference."""
+"""차량 탐지 → 차량 crop → 번호판 탐지 → 원본 좌표 복원의 2단계 inference.
+
+python 03_two_stage/scripts/03_inference/inference_two_stage.py \
+  --model 02_quarter/runs/quarter_yolo26n_20260909-145054/weights/best.pt \
+  --source 03_two_stage/data/preprocessed/images/test \
+  --conf 0.001 \
+  --vehicle-crop-conf 0.25 \
+  --iou 0.70 \
+  --global-nms-iou 0.50 \
+  --image-size 640 \
+  --batch 16 \
+  --device 0
+  """ 
 
 from __future__ import annotations
 
