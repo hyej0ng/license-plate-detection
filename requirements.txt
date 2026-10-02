@@ -1,0 +1,28 @@
+# Python 3.11 권장
+# 설치: python -m pip install -r requirements.txt
+
+# NVIDIA Driver 580.82.09 환경에서 사용한 CUDA 12.6 PyTorch wheel
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.6.0+cu126
+torchvision==0.21.0+cu126
+
+# YOLO 학습 및 headless OpenCV
+ultralytics-opencv-headless==8.4.95
+opencv-python-headless>=4.10,<6
+
+# 전처리, 학습 모니터링 및 분석
+matplotlib>=3.9,<4
+numpy>=1.26,<3
+nvidia-ml-py>=12,<14
+pandas>=2.2,<4
+pillow>=10,<13
+psutil>=5.9,<8
+PyYAML>=6,<7
+scikit-learn>=1.5,<2
+scipy>=1.13,<2
+seaborn>=0.13,<1
+tqdm>=4.66,<5
+
+# 노트북 개발 환경
+ipykernel>=6,<8
+jupyterlab>=4,<5
