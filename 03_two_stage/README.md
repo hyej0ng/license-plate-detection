@@ -227,4 +227,3 @@ python 03_two_stage/run_pipeline.py \
 
 - Dataset: `license_plate_vehicle`, parv217, Roboflow Universe, version 2
 - Dataset license displayed by Roboflow Universe: CC BY 4.0
-- 공개 또는 배포 전에 원본 페이지의 최신 라이선스와 attribution 요구사항을 다시 확인하세요.
