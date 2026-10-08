@@ -1,0 +1,65 @@
+# Dataset and derived data (images, labels, caches, visualizations)
+**/data/**
+common/test_images/**
+
+# Jupyter notebooks inside implementation folders
+**/scripts/**/*.ipynb
+**/.ipynb_checkpoints/**
+
+# Model checkpoints and exported models
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.torchscript
+*.tflite
+*.pb
+
+# Generated experiment artifacts
+**/runs/**
+**/results/**
+**/logs/**
+*.log
+!03_two_stage/logs/
+!03_two_stage/logs/.gitkeep
+*.cache
+
+# Local dataset configuration (commit the example file instead)
+01_baseline/configs/license_plate.yaml
+03_two_stage/configs/license_plate_vehicle.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Editor, OS, and Codex-local files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.agents/
+.codex/
+AGENTS.md
+
+# Maintained as a separate nested Git repository
+/04_video_detection/
+
+# Temporary files
+*.tmp
+*.swp
+*~
